@@ -1,5 +1,5 @@
 # OpenPass
-Hey there! Welcome to the future home of **OpenPass—a desktop-based, open-source password manager** that's all about security, privacy, and ease of use. I’m currently working on this project with the goal of launching it sometime in 2025. But first things first, let’s dive into what **OpenPass** is all about and how you can get involved if you’re interested.
+Hey there! Welcome to the future home of **OpenPass—a desktop-based, open-source password manager** that's all about security, privacy, and ease of use. I’m currently working on this project with the goal of launching it **sometime in 2025.** But first things first, let’s dive into what **OpenPass** is all about and how you can get involved if you’re interested.
 
 **What is OpenPass?**
 
