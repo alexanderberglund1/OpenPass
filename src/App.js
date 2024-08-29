@@ -1,44 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus } from 'react-feather';
+import { Search, Plus, Save, Upload, Moon, Sun } from 'react-feather';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import ItemList from './components/ItemList';
 import AddNewForm from './components/AddNewForm';
+import { ThemeProvider, useTheme } from './ThemeContext';
 const { ipcRenderer } = window.require('electron');
 
-function App() {
+function AppContent() {
   const [activeCategory, setActiveCategory] = useState('Logins');
   const [showAddNew, setShowAddNew] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
-  const [showPassword, setShowPassword] = useState({});
-
-  useEffect(() => {
-    loadItems();
-    ipcRenderer.on('item-saved', () => {
-      loadItems();
-    });
-    return () => {
-      ipcRenderer.removeAllListeners('item-saved');
-    };
-  }, []);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
 
   useEffect(() => {
     filterItems();
   }, [items, activeCategory, searchTerm]);
 
-  const loadItems = () => {
-    ipcRenderer.send('load-items');
-    ipcRenderer.once('items-loaded', (event, loadedItems) => {
-      console.log('Loaded items:', loadedItems);
-      setItems(loadedItems);
-    });
-  };
-
   const filterItems = () => {
     const filtered = items.filter(item => 
-      (activeCategory === 'Logins' ? item.type === 'login' : item.type === activeCategory.toLowerCase().replace(' ', '_')) &&
+      (activeCategory === 'Logins' ? item.type === 'logins' : item.type === activeCategory.toLowerCase().replace(' ', '_')) &&
       (item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.website?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -47,21 +31,58 @@ function App() {
   };
 
   const handleAddNew = (newItem) => {
-    ipcRenderer.send('save-item', { ...newItem, id: Date.now(), type: activeCategory.toLowerCase().replace(' ', '_') });
+    setItems([...items, { ...newItem, id: Date.now(), type: activeCategory.toLowerCase().replace(' ', '_') }]);
     setShowAddNew(false);
+    setUnsavedChanges(true);
+  };
+
+  const handleDeleteItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+    setUnsavedChanges(true);
+  };
+
+  const handleEditItem = (editedItem) => {
+    setItems(items.map(item => item.id === editedItem.id ? editedItem : item));
+    setUnsavedChanges(true);
+  };
+
+  const handleSave = () => {
+    ipcRenderer.send('save-database', items);
+    ipcRenderer.once('database-saved', (event, message) => {
+      console.log(message);
+      setUnsavedChanges(false);
+    });
+  };
+
+  const handleLoad = () => {
+    ipcRenderer.send('load-database');
+    ipcRenderer.once('database-loaded', (event, loadedItems) => {
+      setItems(loadedItems);
+      setUnsavedChanges(false);
+    });
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className={`flex h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       <Sidebar activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
       <div className="flex-1 flex flex-col">
-        <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} setShowAddNew={setShowAddNew} />
-        <main className="flex-1 p-6 bg-gray-100 overflow-auto">
+        <Header 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          setShowAddNew={setShowAddNew}
+          unsavedChanges={unsavedChanges}
+          onSave={handleSave}
+          onLoad={handleLoad}
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+        <main className="flex-1 p-6 overflow-auto">
           <h2 className="text-2xl font-semibold mb-4">{activeCategory}</h2>
           <ItemList 
-            items={filteredItems} 
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
+            items={filteredItems}
+            onDeleteItem={handleDeleteItem}
+            onEditItem={handleEditItem}
+            darkMode={darkMode}
           />
         </main>
       </div>
@@ -70,9 +91,18 @@ function App() {
           onSave={handleAddNew}
           onCancel={() => setShowAddNew(false)}
           category={activeCategory}
+          darkMode={darkMode}
         />
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

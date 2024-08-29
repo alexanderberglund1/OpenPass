@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Eye, EyeOff, Edit2, Trash2, Copy } from 'react-feather';
-import WebsiteLogo from './WebsiteLogo';
 
-function ItemList({ items, showPassword, setShowPassword }) {
+function ItemList({ items }) {
+  const [showPassword, setShowPassword] = useState({});
+
   const togglePasswordVisibility = (id) => {
     setShowPassword(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -12,48 +13,48 @@ function ItemList({ items, showPassword, setShowPassword }) {
   }
 
   return (
-    <ul>
+    <ul className="space-y-2">
       {items.map(item => (
-        <li key={item.id} className="bg-white shadow rounded-lg p-4 mb-4 hover:shadow-md transition-shadow duration-200">
+        <li key={item.id} className="bg-white shadow-sm rounded-lg p-3 hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <WebsiteLogo url={item.website} />
-              <h3 className="font-semibold text-lg ml-2">{item.title}</h3>
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${item.website}&sz=32`}
+                alt="Website Logo"
+                className="w-6 h-6 mr-2"
+              />
+              <div>
+                <h3 className="font-semibold text-md">{item.title}</h3>
+                <p className="text-sm text-gray-600">{item.username}</p>
+              </div>
             </div>
-            <div className="space-x-2">
-              <button className="text-blue-500 hover:text-blue-700">
-                <Edit2 size={18} />
+            <div className="flex items-center space-x-2">
+              <button className="text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                <Edit2 size={16} />
               </button>
-              <button className="text-red-500 hover:text-red-700">
-                <Trash2 size={18} />
+              <button className="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
-          {item.username && (
-            <div className="flex items-center mt-2">
-              <p className="text-gray-600 mr-2">{item.username}</p>
-              <button className="text-gray-400 hover:text-gray-600">
-                <Copy size={16} />
-              </button>
-            </div>
-          )}
-          {item.password && (
-            <div className="flex items-center mt-2">
-              <input 
-                type={showPassword[item.id] ? "text" : "password"} 
-                value={item.password} 
-                readOnly 
-                className="bg-gray-100 p-1 rounded mr-2"
-              />
-              <button onClick={() => togglePasswordVisibility(item.id)}>
-                {showPassword[item.id] ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-              <button className="ml-2 text-gray-400 hover:text-gray-600">
-                <Copy size={16} />
-              </button>
-            </div>
-          )}
-          {item.website && <p className="text-gray-600 mt-2">{item.website}</p>}
+          <div className="mt-2 flex items-center">
+            <input 
+              type={showPassword[item.id] ? "text" : "password"} 
+              value={item.password} 
+              readOnly 
+              className="bg-gray-100 p-1 rounded text-sm w-40 mr-2 focus:outline-none"
+            />
+            <button 
+              onClick={() => togglePasswordVisibility(item.id)}
+              className="text-gray-400 hover:text-blue-500 transition-colors duration-200 mr-2"
+            >
+              {showPassword[item.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+            <button className="text-gray-400 hover:text-blue-500 transition-colors duration-200">
+              <Copy size={16} />
+            </button>
+          </div>
+          {item.website && <p className="text-xs text-gray-500 mt-1">{item.website}</p>}
         </li>
       ))}
     </ul>
