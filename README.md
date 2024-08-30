@@ -4,7 +4,8 @@ Hey there! Welcome to the future home of **OpenPass—a desktop-based, open-sour
 **What is OpenPass?**
 
 **OpenPass** is a desktop application designed to help you securely manage your passwords and other sensitive information across all your devices. It’s built with privacy at its core—your data stays yours and only yours. No cloud services that you don’t control, no hidden telemetry, just straightforward, end-to-end encrypted password management. With OpenPass, you’ll be able to store, organize, and access your passwords with ease, all while knowing that your information is safe from prying eyes.
-How You Can Help
+
+**How You Can Help**
 
 **OpenPass** is more than just a project—it’s a community effort, and I’d love to have you onboard. Whether you’re a seasoned developer, a designer, a security enthusiast, or someone who just loves testing new software, there’s a place for you here.
 
