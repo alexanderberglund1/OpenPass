@@ -7,15 +7,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          light: '#4da6ff',
-          DEFAULT: '#0080ff',
-          dark: '#0066cc',
+        dark: {
+          bg: '#1c1c1e',
+          sidebar: '#2c2c2e',
+          card: '#2c2c2e',
+          text: '#ffffff',
+          'text-secondary': '#8e8e93',
+          'button-primary': '#0A84FF',
+          'button-secondary': '#3a3a3c',
         },
-        secondary: {
-          light: '#f3f4f6',
-          DEFAULT: '#e5e7eb',
-          dark: '#d1d5db',
+        light: {
+          bg: '#f2f2f7',
+          sidebar: '#ffffff',
+          card: '#ffffff',
+          text: '#000000',
+          'text-secondary': '#3a3a3c',
+          'button-primary': '#007AFF',
+          'button-secondary': '#e5e5ea',
         },
       },
     },

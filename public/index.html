@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>OpenPass</title>
-</head>
-<body>
+  </head>
+  <body>
     <div id="root"></div>
-</body>
+    <script>
+      window.addEventListener('error', function(event) {
+        if (event.message === "Failed to fetch") {
+          event.preventDefault();
+        }
+      });
+
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.log('Global error:', message, 'at', source, lineno, colno);
+        console.log('Error object:', error);
+        return false;
+      };
+    </script>
+  </body>
 </html>

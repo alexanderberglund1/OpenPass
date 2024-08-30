@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Save, Upload, Moon, Sun } from 'react-feather';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import ItemList from './components/ItemList';
 import AddNewForm from './components/AddNewForm';
+import MasterPasswordForm from './MasterPasswordForm';
 import { ThemeProvider, useTheme } from './ThemeContext';
 const { ipcRenderer } = window.require('electron');
 
@@ -15,15 +15,26 @@ function AppContent() {
   const [filteredItems, setFilteredItems] = useState([]);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const { darkMode, toggleDarkMode } = useTheme();
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
+
+  useEffect(() => {
+    checkMasterPasswordExists();
+  }, []);
 
   useEffect(() => {
     filterItems();
   }, [items, activeCategory, searchTerm]);
 
+  const checkMasterPasswordExists = async () => {
+    const result = await ipcRenderer.invoke('check-master-password-exists');
+    setNeedsSetup(!result.exists);
+  };
+
   const filterItems = () => {
     const filtered = items.filter(item => 
-      (activeCategory === 'Logins' ? item.type === 'logins' : item.type === activeCategory.toLowerCase().replace(' ', '_')) &&
-      (item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.type === activeCategory.toLowerCase().replace(' ', '_') &&
+      (item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.website?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -46,24 +57,80 @@ function AppContent() {
     setUnsavedChanges(true);
   };
 
-  const handleSave = () => {
-    ipcRenderer.send('save-database', items);
-    ipcRenderer.once('database-saved', (event, message) => {
-      console.log(message);
-      setUnsavedChanges(false);
-    });
+  const handleCopyItem = (item) => {
+    const textToCopy = item.password || item.cardNumber || item.accountNumber;
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => console.log('Copied successfully'))
+      .catch(err => console.error('Failed to copy:', err));
   };
 
-  const handleLoad = () => {
-    ipcRenderer.send('load-database');
-    ipcRenderer.once('database-loaded', (event, loadedItems) => {
-      setItems(loadedItems);
-      setUnsavedChanges(false);
-    });
+  const handleSave = async () => {
+    try {
+      const result = await ipcRenderer.invoke('save-database', items);
+      if (result.success) {
+        console.log(result.message);
+        setUnsavedChanges(false);
+      } else {
+        console.error('Error saving database:', result.error);
+      }
+    } catch (error) {
+      console.error('Error saving database:', error);
+    }
   };
+
+  const handleLoad = async () => {
+    try {
+      const result = await ipcRenderer.invoke('load-database');
+      if (result.success) {
+        setItems(result.data);
+        setUnsavedChanges(false);
+      } else {
+        console.error('Error loading database:', result.error);
+      }
+    } catch (error) {
+      console.error('Error loading database:', error);
+    }
+  };
+
+  const handleSetMasterPassword = async (password) => {
+    try {
+      const result = await ipcRenderer.invoke('set-master-password', password);
+      if (result.success) {
+        setNeedsSetup(false);
+        setIsUnlocked(true);
+      } else {
+        console.error('Error setting master password:', result.error);
+      }
+    } catch (error) {
+      console.error('Error setting master password:', error);
+    }
+  };
+
+  const handleUnlock = async (password) => {
+    try {
+      const result = await ipcRenderer.invoke('unlock-database', { password });
+      if (result.success) {
+        setIsUnlocked(true);
+        await handleLoad(); // Load the database after unlocking
+      } else {
+        console.error('Error unlocking database:', result.error);
+        // You might want to show an error message to the user here
+      }
+    } catch (error) {
+      console.error('Error unlocking database:', error);
+    }
+  };
+
+  if (needsSetup) {
+    return <MasterPasswordForm onSubmit={handleSetMasterPassword} isSetup={true} />;
+  }
+
+  if (!isUnlocked) {
+    return <MasterPasswordForm onSubmit={handleUnlock} isSetup={false} />;
+  }
 
   return (
-    <div className={`flex h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
+    <div className={`flex h-screen ${darkMode ? 'dark bg-dark-bg text-dark-text' : 'bg-light-bg text-light-text'}`}>
       <Sidebar activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
       <div className="flex-1 flex flex-col">
         <Header 
@@ -82,7 +149,8 @@ function AppContent() {
             items={filteredItems}
             onDeleteItem={handleDeleteItem}
             onEditItem={handleEditItem}
-            darkMode={darkMode}
+            onCopyItem={handleCopyItem}
+            category={activeCategory}
           />
         </main>
       </div>
@@ -91,7 +159,6 @@ function AppContent() {
           onSave={handleAddNew}
           onCancel={() => setShowAddNew(false)}
           category={activeCategory}
-          darkMode={darkMode}
         />
       )}
     </div>

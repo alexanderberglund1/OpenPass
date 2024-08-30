@@ -1,63 +1,83 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Edit2, Trash2, Copy } from 'react-feather';
+import React from 'react';
+import { Eye, EyeOff, Edit2, Trash2, Copy, CreditCard, DollarSign } from 'react-feather';
+import { useTheme } from '../ThemeContext';
 
-function ItemList({ items }) {
-  const [showPassword, setShowPassword] = useState({});
+function ItemList({ items, onDeleteItem, onEditItem, onCopyItem, category }) {
+  const { darkMode } = useTheme();
 
-  const togglePasswordVisibility = (id) => {
-    setShowPassword(prev => ({ ...prev, [id]: !prev[id] }));
+  const renderPaymentCard = (item) => {
+    const isCard = item.cardNumber != null;
+    const Icon = isCard ? CreditCard : DollarSign;
+    const lastFour = isCard ? item.cardNumber.slice(-4) : item.accountNumber.slice(-4);
+
+    return (
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-200'} rounded-lg p-4 shadow-md relative overflow-hidden`}>
+        <div className="absolute top-2 right-2 flex space-x-2">
+          <button onClick={() => onEditItem(item)} className="text-gray-400 hover:text-white">
+            <Edit2 size={16} />
+          </button>
+          <button onClick={() => onDeleteItem(item.id)} className="text-gray-400 hover:text-white">
+            <Trash2 size={16} />
+          </button>
+        </div>
+        <Icon className="text-gray-400 mb-2" size={32} />
+        <div className="text-white text-lg font-semibold mb-1">{item.title}</div>
+        <div className="text-gray-400 text-sm">**** **** **** {lastFour}</div>
+      </div>
+    );
+  };
+
+  const renderLoginItem = (item) => {
+    return (
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-200'} rounded-lg p-4 shadow-md`}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center">
+            {item.website && (
+              <img 
+                src={`https://www.google.com/s2/favicons?domain=${item.website}&sz=32`}
+                alt="Website icon"
+                className="w-5 h-5 mr-2"
+              />
+            )}
+            <h3 className="font-semibold text-white">{item.title}</h3>
+          </div>
+          <div className="flex space-x-2">
+            <button onClick={() => onEditItem(item)} className="text-gray-400 hover:text-white">
+              <Edit2 size={16} />
+            </button>
+            <button onClick={() => onDeleteItem(item.id)} className="text-gray-400 hover:text-white">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-gray-400">{item.username}</p>
+        <div className="mt-2 flex items-center">
+          <input 
+            type="password" 
+            value={item.password} 
+            readOnly 
+            className="bg-gray-700 text-white p-1 rounded text-sm w-full mr-2"
+          />
+          <button onClick={() => onCopyItem(item)} className="text-gray-400 hover:text-white ml-2">
+            <Copy size={16} />
+          </button>
+        </div>
+      </div>
+    );
   };
 
   if (items.length === 0) {
-    return <p className="text-gray-500 text-center mt-4">No items found in this category.</p>;
+    return <p className="text-center mt-4 text-gray-400">No items found in this category.</p>;
   }
 
   return (
-    <ul className="space-y-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {items.map(item => (
-        <li key={item.id} className="bg-white shadow-sm rounded-lg p-3 hover:shadow-md transition-shadow duration-200">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${item.website}&sz=32`}
-                alt="Website Logo"
-                className="w-6 h-6 mr-2"
-              />
-              <div>
-                <h3 className="font-semibold text-md">{item.title}</h3>
-                <p className="text-sm text-gray-600">{item.username}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="text-gray-400 hover:text-blue-500 transition-colors duration-200">
-                <Edit2 size={16} />
-              </button>
-              <button className="text-gray-400 hover:text-red-500 transition-colors duration-200">
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-          <div className="mt-2 flex items-center">
-            <input 
-              type={showPassword[item.id] ? "text" : "password"} 
-              value={item.password} 
-              readOnly 
-              className="bg-gray-100 p-1 rounded text-sm w-40 mr-2 focus:outline-none"
-            />
-            <button 
-              onClick={() => togglePasswordVisibility(item.id)}
-              className="text-gray-400 hover:text-blue-500 transition-colors duration-200 mr-2"
-            >
-              {showPassword[item.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-            <button className="text-gray-400 hover:text-blue-500 transition-colors duration-200">
-              <Copy size={16} />
-            </button>
-          </div>
-          {item.website && <p className="text-xs text-gray-500 mt-1">{item.website}</p>}
-        </li>
+        <div key={item.id}>
+          {category === 'Payments' ? renderPaymentCard(item) : renderLoginItem(item)}
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 
